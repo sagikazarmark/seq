@@ -54,7 +54,7 @@ func TestUniq(t *testing.T) {
 }
 
 func ExampleUniq2() {
-	roles := seq.Combine2(
+	roles := seq.Chain2(
 		maps.All(map[string]string{"alice": "admin", "bob": "user"}),
 		maps.All(map[string]string{"alice": "user", "charlie": "user"}),
 	)
@@ -92,7 +92,7 @@ func TestUniq2(t *testing.T) {
 		},
 		{
 			"duplicate_keys_from_manual_seq",
-			seq.Combine2(
+			seq.Chain2(
 				maps.All(map[string]int{"a": 1, "b": 2}),
 				maps.All(map[string]int{"a": 3, "c": 4, "b": 5}),
 			),

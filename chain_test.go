@@ -10,11 +10,11 @@ import (
 	"github.com/sagikazarmark/seq"
 )
 
-func ExampleCombine() {
+func ExampleChain() {
 	users1 := slices.Values([]string{"alice", "bob"})
 	users2 := slices.Values([]string{"charlie", "dave"})
 
-	users := seq.Combine(users1, users2)
+	users := seq.Chain(users1, users2)
 
 	for user := range users {
 		fmt.Println(user)
@@ -27,7 +27,7 @@ func ExampleCombine() {
 	// dave
 }
 
-func TestCombine(t *testing.T) {
+func TestChain(t *testing.T) {
 	testCases := []struct {
 		name     string
 		seqs     []iter.Seq[int]
@@ -42,7 +42,7 @@ func TestCombine(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := slices.Collect(seq.Combine(tc.seqs...))
+			actual := slices.Collect(seq.Chain(tc.seqs...))
 
 			if !slices.Equal(actual, tc.expected) {
 				t.Errorf("expected %v, got %v", tc.expected, actual)
@@ -51,11 +51,11 @@ func TestCombine(t *testing.T) {
 	}
 }
 
-func ExampleCombine2() {
+func ExampleChain2() {
 	roles1 := maps.All(map[string]string{"alice": "admin", "bob": "admin"})
 	roles2 := maps.All(map[string]string{"bob": "user", "charlie": "manager"})
 
-	roles := seq.Combine2(roles1, roles2)
+	roles := seq.Chain2(roles1, roles2)
 
 	printSorted(roles)
 
@@ -66,7 +66,7 @@ func ExampleCombine2() {
 	// charlie: manager
 }
 
-func TestCombine2(t *testing.T) {
+func TestChain2(t *testing.T) {
 	testCases := []struct {
 		name     string
 		seqs     []iter.Seq2[string, int]
@@ -81,7 +81,7 @@ func TestCombine2(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := maps.Collect(seq.Combine2(tc.seqs...))
+			actual := maps.Collect(seq.Chain2(tc.seqs...))
 
 			if !maps.Equal(actual, tc.expected) {
 				t.Errorf("expected %v, got %v", tc.expected, actual)
