@@ -5,7 +5,7 @@
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/sagikazarmark/seq?style=flat-square&color=61CFDD)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/sagikazarmark/seq/badge?style=flat-square)](https://deps.dev/go/github.com%252Fsagikazarmark%252Fseq)
 
-**Iterators for Go.**
+**Utilities for working with Go 1.23+ iterator sequences.**
 
 ## Installation
 
