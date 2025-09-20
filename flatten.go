@@ -2,7 +2,7 @@ package seq
 
 import "iter"
 
-// Flatten returns a sequence that yields all elements of each slice
+// Flatten returns an iterator that yields all elements of each slice
 // produced by the outer sequence. It takes a sequence of slices and
 // "flattens" it into a sequence of individual elements.
 //
