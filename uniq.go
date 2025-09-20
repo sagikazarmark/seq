@@ -9,15 +9,17 @@ func Uniq[V comparable](seq iter.Seq[V]) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		seen := make(map[V]struct{})
 
-		seq(func(v V) bool {
+		for v := range seq {
 			if _, ok := seen[v]; ok {
-				return true // already seen, skip
+				continue // already seen, skip
 			}
 
 			seen[v] = struct{}{}
 
-			return yield(v)
-		})
+			if !yield(v) {
+				return
+			}
+		}
 	}
 }
 
@@ -31,14 +33,16 @@ func Uniq2[K comparable, V any](seq iter.Seq2[K, V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		seen := make(map[K]struct{})
 
-		seq(func(k K, v V) bool {
+		for k, v := range seq {
 			if _, ok := seen[k]; ok {
-				return true // already seen key, skip
+				continue // already seen key, skip
 			}
 
 			seen[k] = struct{}{}
 
-			return yield(k, v)
-		})
+			if !yield(k, v) {
+				return
+			}
+		}
 	}
 }
