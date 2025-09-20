@@ -10,25 +10,33 @@ import (
 )
 
 func ExampleFlatten() {
-	s := slices.Values([][]string{
-		{"hello", "world"},
-		{"how", "are", "you"},
-		{"today"},
-	})
+	job1 := func() []string {
+		return []string{"foo", "bar"}
+	}
+	job2 := func() []string {
+		return []string{"baz"}
+	}
+	job3 := func() []string {
+		return []string{"bat", "qux", "quux"}
+	}
 
-	greeting := seq.Flatten(s)
+	doJobs := func() iter.Seq[[]string] {
+		return slices.Values([][]string{job1(), job2(), job3()})
+	}
 
-	for word := range greeting {
-		fmt.Println(word)
+	results := seq.Flatten(doJobs())
+
+	for result := range results {
+		fmt.Println(result)
 	}
 
 	// Output:
-	// hello
-	// world
-	// how
-	// are
-	// you
-	// today
+	// foo
+	// bar
+	// baz
+	// bat
+	// qux
+	// quux
 }
 
 func TestFlatten(t *testing.T) {
