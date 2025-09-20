@@ -5,8 +5,6 @@ import (
 	"iter"
 	"maps"
 	"slices"
-	"sort"
-	"strings"
 	"testing"
 
 	"github.com/sagikazarmark/seq"
@@ -63,15 +61,7 @@ func ExampleUniq2() {
 
 	unique := seq.Uniq2(roles)
 
-	// Maps are unordered, so we need to hack here for this example
-	var output []string
-
-	for user, role := range unique {
-		output = append(output, fmt.Sprintf("%s: %s\n", user, role))
-	}
-
-	sort.Strings(output)
-	fmt.Print(strings.Join(output, ""))
+	printSorted(unique)
 
 	// Output:
 	// alice: admin

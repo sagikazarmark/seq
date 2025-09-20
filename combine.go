@@ -26,7 +26,7 @@ func Combine[V any](seqs ...iter.Seq[V]) iter.Seq[V] {
 // If multiple sequences contain the same key, the later sequences will overwrite
 // the earlier ones when collected into a map. However, when iterating directly,
 // all key-value pairs are yielded, including duplicates.
-func Combine2[K comparable, V any](seqs ...iter.Seq2[K, V]) iter.Seq2[K, V] {
+func Combine2[K any, V any](seqs ...iter.Seq2[K, V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		for _, seq := range seqs {
 			for k, v := range seq {

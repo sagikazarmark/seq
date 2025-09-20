@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"sort"
-	"strings"
 
 	"github.com/sagikazarmark/seq"
 )
@@ -38,15 +36,7 @@ func ExampleFilter2() {
 
 	oddAndLongNumbers := seq.Filter2(numbers, oddAndLong)
 
-	// Maps are unordered, so we need to hack here for this example
-	var output []string
-
-	for s, i := range oddAndLongNumbers {
-		output = append(output, fmt.Sprintf("%s: %d\n", s, i))
-	}
-
-	sort.Strings(output)
-	fmt.Print(strings.Join(output, ""))
+	printSorted(oddAndLongNumbers)
 
 	// Output:
 	// five: 5

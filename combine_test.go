@@ -5,8 +5,6 @@ import (
 	"iter"
 	"maps"
 	"slices"
-	"sort"
-	"strings"
 	"testing"
 
 	"github.com/sagikazarmark/seq"
@@ -59,15 +57,7 @@ func ExampleCombine2() {
 
 	roles := seq.Combine2(roles1, roles2)
 
-	// Maps are unordered, so we need to hack here for this example
-	var output []string
-
-	for user, role := range roles {
-		output = append(output, fmt.Sprintf("%s: %s\n", user, role))
-	}
-
-	sort.Strings(output)
-	fmt.Print(strings.Join(output, ""))
+	printSorted(roles)
 
 	// Output:
 	// alice: admin
