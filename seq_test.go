@@ -659,6 +659,530 @@ func ExampleUniq() {
 	// 5
 }
 
+func ExampleSkip() {
+	numbers := slices.Values([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+
+	skip3 := seq.Skip(numbers, 3)
+
+	for n := range skip3 {
+		fmt.Println(n)
+	}
+
+	// Output:
+	// 4
+	// 5
+	// 6
+	// 7
+	// 8
+	// 9
+	// 10
+}
+
+func TestSkip(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    []int
+		n        uint
+		expected []int
+	}{
+		{
+			"empty_sequence",
+			[]int{},
+			3,
+			[]int{},
+		},
+		{
+			"skip_zero",
+			[]int{1, 2, 3, 4, 5},
+			0,
+			[]int{1, 2, 3, 4, 5},
+		},
+		{
+			"skip_less_than_available",
+			[]int{1, 2, 3, 4, 5},
+			3,
+			[]int{4, 5},
+		},
+		{
+			"skip_exactly_available",
+			[]int{1, 2, 3, 4, 5},
+			5,
+			[]int{},
+		},
+		{
+			"skip_more_than_available",
+			[]int{1, 2, 3},
+			10,
+			[]int{},
+		},
+		{
+			"skip_one_from_single_element",
+			[]int{42},
+			1,
+			[]int{},
+		},
+		{
+			"skip_zero_from_single_element",
+			[]int{42},
+			0,
+			[]int{42},
+		},
+		{
+			"skip_more_than_single_element",
+			[]int{42},
+			5,
+			[]int{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := slices.Values(tc.input)
+			actual := slices.Collect(seq.Skip(input, tc.n))
+
+			if !slices.Equal(actual, tc.expected) {
+				t.Errorf("expected %v, got %v", tc.expected, actual)
+			}
+		})
+	}
+}
+
+func ExampleSkip2() {
+	data := maps.All(map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5})
+
+	skip2 := seq.Skip2(data, 2)
+
+	count := 0
+	for k, v := range skip2 {
+		fmt.Printf("%s: %d\n", k, v)
+		count++
+	}
+	fmt.Printf("Total pairs after skip: %d\n", count)
+
+	// Output will vary due to map iteration order, but will show 3 pairs (5 - 2 = 3)
+}
+
+func TestSkip2(t *testing.T) {
+	testCases := []struct {
+		name        string
+		input       map[string]int
+		n           uint
+		expectedLen int
+	}{
+		{
+			"empty_sequence",
+			map[string]int{},
+			3,
+			0,
+		},
+		{
+			"skip_zero",
+			map[string]int{"a": 1, "b": 2, "c": 3},
+			0,
+			3,
+		},
+		{
+			"skip_less_than_available",
+			map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5},
+			2,
+			3,
+		},
+		{
+			"skip_exactly_available",
+			map[string]int{"a": 1, "b": 2, "c": 3},
+			3,
+			0,
+		},
+		{
+			"skip_more_than_available",
+			map[string]int{"a": 1, "b": 2},
+			10,
+			0,
+		},
+		{
+			"skip_one_from_single_pair",
+			map[string]int{"key": 42},
+			1,
+			0,
+		},
+		{
+			"skip_zero_from_single_pair",
+			map[string]int{"key": 42},
+			0,
+			1,
+		},
+		{
+			"skip_more_than_single_pair",
+			map[string]int{"key": 42},
+			5,
+			0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := maps.All(tc.input)
+			actual := maps.Collect(seq.Skip2(input, tc.n))
+
+			if len(actual) != tc.expectedLen {
+				t.Errorf("expected length %d, got %d", tc.expectedLen, len(actual))
+			}
+
+			// Verify that all returned pairs exist in the original input
+			for k, v := range actual {
+				if originalV, exists := tc.input[k]; !exists || originalV != v {
+					t.Errorf("unexpected pair %s: %d not in original input", k, v)
+				}
+			}
+		})
+	}
+}
+
+func ExampleTake() {
+	numbers := slices.Values([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+
+	first5 := seq.Take(numbers, 5)
+
+	for n := range first5 {
+		fmt.Println(n)
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+	// 4
+	// 5
+}
+
+func TestTake(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    []int
+		n        uint
+		expected []int
+	}{
+		{
+			"empty_sequence",
+			[]int{},
+			5,
+			[]int{},
+		},
+		{
+			"take_zero",
+			[]int{1, 2, 3, 4, 5},
+			0,
+			[]int{},
+		},
+		{
+			"take_less_than_available",
+			[]int{1, 2, 3, 4, 5},
+			3,
+			[]int{1, 2, 3},
+		},
+		{
+			"take_exactly_available",
+			[]int{1, 2, 3, 4, 5},
+			5,
+			[]int{1, 2, 3, 4, 5},
+		},
+		{
+			"take_more_than_available",
+			[]int{1, 2, 3},
+			10,
+			[]int{1, 2, 3},
+		},
+		{
+			"take_one_from_single_element",
+			[]int{42},
+			1,
+			[]int{42},
+		},
+		{
+			"take_zero_from_single_element",
+			[]int{42},
+			0,
+			[]int{},
+		},
+		{
+			"take_more_than_single_element",
+			[]int{42},
+			5,
+			[]int{42},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := slices.Values(tc.input)
+			actual := slices.Collect(seq.Take(input, tc.n))
+
+			if !slices.Equal(actual, tc.expected) {
+				t.Errorf("expected %v, got %v", tc.expected, actual)
+			}
+		})
+	}
+}
+
+func ExampleTake2() {
+	data := maps.All(map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5})
+
+	first3 := seq.Take2(data, 3)
+
+	count := 0
+	for k, v := range first3 {
+		fmt.Printf("%s: %d\n", k, v)
+		count++
+	}
+	fmt.Printf("Total pairs: %d\n", count)
+
+	// Output (map iteration order is not guaranteed, but we'll get 3 pairs):
+	// Total pairs: 3
+}
+
+func TestTake2(t *testing.T) {
+	testCases := []struct {
+		name        string
+		input       map[string]int
+		n           uint
+		expectedLen int
+	}{
+		{
+			"empty_sequence",
+			map[string]int{},
+			5,
+			0,
+		},
+		{
+			"take_zero",
+			map[string]int{"a": 1, "b": 2, "c": 3},
+			0,
+			0,
+		},
+		{
+			"take_less_than_available",
+			map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5},
+			3,
+			3,
+		},
+		{
+			"take_exactly_available",
+			map[string]int{"a": 1, "b": 2, "c": 3},
+			3,
+			3,
+		},
+		{
+			"take_more_than_available",
+			map[string]int{"a": 1, "b": 2},
+			10,
+			2,
+		},
+		{
+			"take_one_from_single_pair",
+			map[string]int{"key": 42},
+			1,
+			1,
+		},
+		{
+			"take_zero_from_single_pair",
+			map[string]int{"key": 42},
+			0,
+			0,
+		},
+		{
+			"take_more_than_single_pair",
+			map[string]int{"key": 42},
+			5,
+			1,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := maps.All(tc.input)
+			actual := maps.Collect(seq.Take2(input, tc.n))
+
+			if len(actual) != tc.expectedLen {
+				t.Errorf("expected length %d, got %d", tc.expectedLen, len(actual))
+			}
+
+			// Verify that all returned pairs exist in the original input
+			for k, v := range actual {
+				if originalV, exists := tc.input[k]; !exists || originalV != v {
+					t.Errorf("unexpected pair %s: %d not in original input", k, v)
+				}
+			}
+		})
+	}
+}
+
+func ExampleTakeWhile() {
+	numbers := slices.Values([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+
+	lessThan5 := seq.TakeWhile(numbers, func(n int) bool { return n < 5 })
+
+	for n := range lessThan5 {
+		fmt.Println(n)
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+	// 4
+}
+
+func TestTakeWhile(t *testing.T) {
+	testCases := []struct {
+		name      string
+		input     []int
+		predicate func(int) bool
+		expected  []int
+	}{
+		{
+			"empty_sequence",
+			[]int{},
+			func(n int) bool { return n < 5 },
+			[]int{},
+		},
+		{
+			"nil_predicate",
+			[]int{1, 2, 3, 4, 5},
+			nil,
+			[]int{},
+		},
+		{
+			"take_while_less_than_5",
+			[]int{1, 2, 3, 4, 5, 6, 7},
+			func(n int) bool { return n < 5 },
+			[]int{1, 2, 3, 4},
+		},
+		{
+			"take_while_even",
+			[]int{2, 4, 6, 8, 9, 10, 12},
+			func(n int) bool { return n%2 == 0 },
+			[]int{2, 4, 6, 8},
+		},
+		{
+			"predicate_never_true",
+			[]int{1, 2, 3, 4, 5},
+			func(n int) bool { return n > 10 },
+			[]int{},
+		},
+		{
+			"predicate_always_true",
+			[]int{1, 2, 3, 4, 5},
+			func(n int) bool { return n > 0 },
+			[]int{1, 2, 3, 4, 5},
+		},
+		{
+			"single_element_true",
+			[]int{42},
+			func(n int) bool { return n == 42 },
+			[]int{42},
+		},
+		{
+			"single_element_false",
+			[]int{42},
+			func(n int) bool { return n != 42 },
+			[]int{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := slices.Values(tc.input)
+			actual := slices.Collect(seq.TakeWhile(input, tc.predicate))
+
+			if !slices.Equal(actual, tc.expected) {
+				t.Errorf("expected %v, got %v", tc.expected, actual)
+			}
+		})
+	}
+}
+
+func ExampleTakeWhile2() {
+	data := maps.All(map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5})
+
+	// Note: Map iteration order is not guaranteed, so this example may vary
+	smallValues := seq.TakeWhile2(data, func(k string, v int) bool { return v < 3 })
+
+	count := 0
+	for k, v := range smallValues {
+		fmt.Printf("%s: %d\n", k, v)
+		count++
+	}
+	fmt.Printf("Total pairs taken: %d\n", count)
+
+	// Output will vary due to map iteration order, but will show pairs with values < 3
+}
+
+func TestTakeWhile2(t *testing.T) {
+	testCases := []struct {
+		name              string
+		input             map[string]int
+		predicate         func(string, int) bool
+		expectedCondition func(map[string]int) bool
+		description       string
+	}{
+		{
+			"empty_sequence",
+			map[string]int{},
+			func(k string, v int) bool { return v < 5 },
+			func(result map[string]int) bool { return len(result) == 0 },
+			"should return empty map",
+		},
+		{
+			"nil_predicate",
+			map[string]int{"a": 1, "b": 2},
+			nil,
+			func(result map[string]int) bool { return len(result) == 0 },
+			"should return empty map when predicate is nil",
+		},
+		{
+			"predicate_never_true",
+			map[string]int{"a": 1, "b": 2, "c": 3},
+			func(k string, v int) bool { return v > 10 },
+			func(result map[string]int) bool { return len(result) == 0 },
+			"should return empty map when predicate never matches",
+		},
+		{
+			"single_element_true",
+			map[string]int{"key": 42},
+			func(k string, v int) bool { return v == 42 },
+			func(result map[string]int) bool {
+				return len(result) == 1 && result["key"] == 42
+			},
+			"should return single element when it matches",
+		},
+		{
+			"single_element_false",
+			map[string]int{"key": 42},
+			func(k string, v int) bool { return v != 42 },
+			func(result map[string]int) bool { return len(result) == 0 },
+			"should return empty when single element doesn't match",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := maps.All(tc.input)
+			actual := maps.Collect(seq.TakeWhile2(input, tc.predicate))
+
+			if !tc.expectedCondition(actual) {
+				t.Errorf("%s, got %v", tc.description, actual)
+			}
+
+			// Verify that all returned pairs exist in the original input
+			for k, v := range actual {
+				if originalV, exists := tc.input[k]; !exists || originalV != v {
+					t.Errorf("unexpected pair %s: %d not in original input", k, v)
+				}
+			}
+		})
+	}
+}
+
 func TestUniq(t *testing.T) {
 	testCases := []struct {
 		name     string

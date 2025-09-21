@@ -157,6 +157,198 @@ func Map2[K any, V any, U any](seq iter.Seq2[K, V], fn func(K, V) U) iter.Seq2[K
 	}
 }
 
+// Skip creates an iterator that skips values until n values are skipped or the end of the iterator is reached (whichever happens first).
+func Skip[V comparable](seq iter.Seq[V], n uint) iter.Seq[V] {
+	// Return early if n is zero
+	if n == 0 {
+		return seq
+	}
+
+	return func(yield func(V) bool) {
+		var i uint
+
+		for v := range seq {
+			if i < n {
+				i++
+
+				continue
+			}
+
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+// Skip2 creates an iterator that skips pairs until n pairs are skipped or the end of the iterator is reached (whichever happens first).
+func Skip2[K comparable, V any](seq iter.Seq2[K, V], n uint) iter.Seq2[K, V] {
+	// Return early if n is zero
+	if n == 0 {
+		return seq
+	}
+
+	return func(yield func(K, V) bool) {
+		var i uint
+
+		for k, v := range seq {
+			if i < n {
+				i++
+
+				continue
+			}
+
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
+// SkipWhile creates an iterator that yields values based on a predicate.
+//
+// It will evaluate the predicate on each value, and skip values while it evaluates true.
+// After false is returned, the rest of the values are yielded.
+func SkipWhile[V comparable](seq iter.Seq[V], predicate func(V) bool) iter.Seq[V] {
+	// Return early if predicate is nil
+	if predicate == nil {
+		return seq
+	}
+
+	return func(yield func(V) bool) {
+		for v := range seq {
+			if predicate(v) {
+				continue
+			}
+
+			predicate = func(V) bool { return false }
+
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+// SkipWhile2 creates an iterator that yields pairs based on a predicate.
+//
+// It will evaluate the predicate on each pair, and skip pairs while it evaluates true.
+// After false is returned, the rest of the pairs are yielded.
+func SkipWhile2[K comparable, V any](seq iter.Seq2[K, V], predicate func(K, V) bool) iter.Seq2[K, V] {
+	// Return early if predicate is nil
+	if predicate == nil {
+		return seq
+	}
+
+	return func(yield func(K, V) bool) {
+		for k, v := range seq {
+			if predicate(k, v) {
+				return
+			}
+
+			predicate = func(K, V) bool { return false }
+
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
+// Take creates an iterator that yields the first n values, or fewer if the underlying iterator ends sooner.
+func Take[V comparable](seq iter.Seq[V], n uint) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		// Return early if n is zero
+		if n == 0 {
+			return
+		}
+
+		var i uint
+
+		for v := range seq {
+			if !yield(v) {
+				return
+			}
+
+			i++
+
+			if i == n {
+				return
+			}
+		}
+	}
+}
+
+// Take2 creates an iterator that yields the first n pairs, or fewer if the underlying iterator ends sooner.
+func Take2[K comparable, V any](seq iter.Seq2[K, V], n uint) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		// Return early if n is zero
+		if n == 0 {
+			return
+		}
+
+		var i uint
+
+		for k, v := range seq {
+			if !yield(k, v) {
+				return
+			}
+
+			i++
+
+			if i == n {
+				return
+			}
+		}
+	}
+}
+
+// TakeWhile creates an iterator that yields values based on a predicate.
+//
+// It will evaluate the predicate on each value, and yield values while it evaluates true.
+// After false is returned, the rest of the values are ignored.
+func TakeWhile[V comparable](seq iter.Seq[V], predicate func(V) bool) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		// Return early if predicate is nil
+		if predicate == nil {
+			return
+		}
+
+		for v := range seq {
+			if !predicate(v) {
+				return
+			}
+
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+// TakeWhile2 creates an iterator that yields pairs based on a predicate.
+//
+// It will evaluate the predicate on each pair, and yield pairs while it evaluates true.
+// After false is returned, the rest of the pairs are ignored.
+func TakeWhile2[K comparable, V any](seq iter.Seq2[K, V], predicate func(K, V) bool) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		// Return early if predicate is nil
+		if predicate == nil {
+			return
+		}
+
+		for k, v := range seq {
+			if !predicate(k, v) {
+				return
+			}
+
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
 // Uniq ensures only unique values are returned from a sequence.
 //
 // Items are returned in the order they first appear.
