@@ -12,18 +12,6 @@ import (
 	"github.com/sagikazarmark/seq"
 )
 
-// Maps are unordered, so we need to hack for examples
-func printSorted[K any, V any](s iter.Seq2[K, V]) {
-	var output []string
-
-	for key, value := range s {
-		output = append(output, fmt.Sprintf("%v: %v\n", key, value))
-	}
-
-	sort.Strings(output)
-	fmt.Print(strings.Join(output, ""))
-}
-
 func ExampleChain() {
 	users1 := slices.Values([]string{"alice", "bob"})
 	users2 := slices.Values([]string{"charlie", "dave"})
@@ -42,12 +30,12 @@ func ExampleChain() {
 }
 
 func ExampleChain2() {
-	roles1 := maps.All(map[string]string{"alice": "admin", "bob": "admin"})
-	roles2 := maps.All(map[string]string{"bob": "user", "charlie": "manager"})
+	users1 := maps.All(map[string]string{"alice": "admin", "bob": "admin"})
+	users2 := maps.All(map[string]string{"bob": "user", "charlie": "manager"})
 
-	roles := seq.Chain2(roles1, roles2)
+	users := seq.Chain2(users1, users2)
 
-	printSorted(roles)
+	printSorted(users)
 
 	// Output:
 	// alice: admin
@@ -59,11 +47,11 @@ func ExampleChain2() {
 func ExampleFilter() {
 	numbers := slices.Values([]int{1, 2, 3, 4, 5})
 
-	odd := func(n int) bool {
+	oddFilter := func(n int) bool {
 		return n%2 == 1
 	}
 
-	oddNumbers := seq.Filter(numbers, odd)
+	oddNumbers := seq.Filter(numbers, oddFilter)
 
 	for n := range oddNumbers {
 		fmt.Println(n)
@@ -76,32 +64,32 @@ func ExampleFilter() {
 }
 
 func ExampleFilter2() {
-	numbers := maps.All(map[string]int{"one": 1, "two": 2, "three": 3, "four": 4, "five": 5})
+	users := maps.All(map[string]string{"alice": "admin", "bob": "user", "charlie": "manager", "dave": "manager"})
 
-	oddAndLong := func(k string, v int) bool {
-		return len(k) > 3 && v%2 == 1
+	managerFilter := func(k string, v string) bool {
+		return len(k) > 3 && v == "manager"
 	}
 
-	oddAndLongNumbers := seq.Filter2(numbers, oddAndLong)
+	managers := seq.Filter2(users, managerFilter)
 
-	printSorted(oddAndLongNumbers)
+	printSorted(managers)
 
 	// Output:
-	// five: 5
-	// three: 3
+	// charlie: manager
+	// dave: manager
 }
 
 func ExampleFilterMap() {
 	numbers := slices.Values([]int{1, 2, 3, 4, 5, 6})
 
-	// Double only odd numbers
+	// Filter odd numbers and double them
 	doubleIfOdd := func(n int) (int, bool) {
 		return n * 2, n%2 == 1
 	}
 
-	doubled := seq.FilterMap(numbers, doubleIfOdd)
+	doubledOdd := seq.FilterMap(numbers, doubleIfOdd)
 
-	for n := range doubled {
+	for n := range doubledOdd {
 		fmt.Println(n)
 	}
 
@@ -112,23 +100,25 @@ func ExampleFilterMap() {
 }
 
 func ExampleFilterMap2() {
-	cart := maps.All(map[string]int{"apple": 5, "banana": 6, "dates": 4})
-	prices := map[string]float64{"apple": 0.5, "banana": 0.4, "cherry": 0.2}
+	salaries := maps.All(map[string]float64{"alice": 100000, "bob": 80000, "charlie": 120000, "dave": 50000})
 
-	// Filter out items with no price tag
-	subtotal := func(k string, v int) (string, bool) {
-		price, ok := prices[k]
+	// Give everyone with a salary under 100,000 credits a raise of 5%
+	// and produce a list of names and new salaries
+	raise := func(k string, v float64) (float64, bool) {
+		if v < 100000 {
+			return v * 1.05, true
+		}
 
-		return fmt.Sprintf("$%.2f", float64(v)*price), ok
+		return v, false
 	}
 
-	subtotals := seq.FilterMap2(cart, subtotal)
+	promotions := seq.FilterMap2(salaries, raise)
 
-	printSorted(subtotals)
+	printSorted(promotions)
 
 	// Output:
-	// apple: $2.50
-	// banana: $2.40
+	// bob: 84000
+	// dave: 52500
 }
 
 func ExampleFlatten() {
@@ -183,21 +173,23 @@ func ExampleMap() {
 }
 
 func ExampleMap2() {
-	cart := maps.All(map[string]int{"apple": 5, "banana": 6, "cherry": 4})
-	prices := map[string]float64{"apple": 0.5, "banana": 0.4, "cherry": 0.2}
+	users := maps.All(map[string]string{"alice": "admin", "bob": "user", "charlie": "manager", "dave": "manager"})
+	payGrades := map[string]int{"admin": 1000, "user": 500, "manager": 1500}
 
-	subtotal := func(k string, v int) string {
-		return fmt.Sprintf("$%.2f", float64(v)*prices[k])
+	// Calculate salaries for each user based on their role
+	calculateSalary := func(k string, v string) int {
+		return payGrades[v]
 	}
 
-	subtotals := seq.Map2(cart, subtotal)
+	salaries := seq.Map2(users, calculateSalary)
 
-	printSorted(subtotals)
+	printSorted(salaries)
 
 	// Output:
-	// apple: $2.50
-	// banana: $2.40
-	// cherry: $0.80
+	// alice: 1000
+	// bob: 500
+	// charlie: 1500
+	// dave: 1500
 }
 
 func ExampleUniq() {
@@ -217,105 +209,6 @@ func ExampleUniq() {
 	// 5
 }
 
-func ExampleSkip() {
-	numbers := slices.Values([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-
-	skip3 := seq.Skip(numbers, 3)
-
-	for n := range skip3 {
-		fmt.Println(n)
-	}
-
-	// Output:
-	// 4
-	// 5
-	// 6
-	// 7
-	// 8
-	// 9
-	// 10
-}
-
-func ExampleSkip2() {
-	data := maps.All(map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5})
-
-	skip2 := seq.Skip2(data, 2)
-
-	count := 0
-	for k, v := range skip2 {
-		fmt.Printf("%s: %d\n", k, v)
-		count++
-	}
-	fmt.Printf("Total pairs after skip: %d\n", count)
-
-	// Output will vary due to map iteration order, but will show 3 pairs (5 - 2 = 3)
-}
-
-func ExampleTake() {
-	numbers := slices.Values([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-
-	first5 := seq.Take(numbers, 5)
-
-	for n := range first5 {
-		fmt.Println(n)
-	}
-
-	// Output:
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-}
-
-func ExampleTake2() {
-	data := maps.All(map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5})
-
-	first3 := seq.Take2(data, 3)
-
-	count := 0
-	for k, v := range first3 {
-		fmt.Printf("%s: %d\n", k, v)
-		count++
-	}
-	fmt.Printf("Total pairs: %d\n", count)
-
-	// Output (map iteration order is not guaranteed, but we'll get 3 pairs):
-	// Total pairs: 3
-}
-
-func ExampleTakeWhile() {
-	numbers := slices.Values([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-
-	lessThan5 := seq.TakeWhile(numbers, func(n int) bool { return n < 5 })
-
-	for n := range lessThan5 {
-		fmt.Println(n)
-	}
-
-	// Output:
-	// 1
-	// 2
-	// 3
-	// 4
-}
-
-func ExampleTakeWhile2() {
-	data := maps.All(map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5})
-
-	// Note: Map iteration order is not guaranteed, so this example may vary
-	smallValues := seq.TakeWhile2(data, func(k string, v int) bool { return v < 3 })
-
-	count := 0
-	for k, v := range smallValues {
-		fmt.Printf("%s: %d\n", k, v)
-		count++
-	}
-	fmt.Printf("Total pairs taken: %d\n", count)
-
-	// Output will vary due to map iteration order, but will show pairs with values < 3
-}
-
 func ExampleUniq2() {
 	roles := seq.Chain2(
 		maps.All(map[string]string{"alice": "admin", "bob": "user"}),
@@ -330,6 +223,101 @@ func ExampleUniq2() {
 	// alice: admin
 	// bob: user
 	// charlie: user
+}
+
+func ExampleSkip() {
+	fruits := slices.Values([]string{"apple", "banana", "cherry", "grape", "mango"})
+
+	skip3 := seq.Skip(fruits, 3)
+
+	for n := range skip3 {
+		fmt.Println(n)
+	}
+
+	// Output:
+	// grape
+	// mango
+}
+
+func ExampleSkip2() {
+	users := seq.Sorted2(map[string]string{"alice": "admin", "bob": "user", "charlie": "manager", "dave": "manager"})
+
+	skip2 := seq.Skip2(users, 2)
+
+	printSorted(skip2)
+
+	// Output:
+	// charlie: manager
+	// dave: manager
+}
+
+func ExampleSorted2() {
+	users := seq.Sorted2(map[string]string{"charlie": "manager", "bob": "user", "alice": "admin", "dave": "manager"})
+
+	for user, role := range users {
+		fmt.Printf("%s: %s\n", user, role)
+	}
+
+	// Output:
+	// alice: admin
+	// bob: user
+	// charlie: manager
+	// dave: manager
+}
+
+func ExampleTake() {
+	fruits := slices.Values([]string{"apple", "banana", "cherry", "grape", "mango"})
+
+	first3 := seq.Take(fruits, 3)
+
+	for n := range first3 {
+		fmt.Println(n)
+	}
+
+	// Output:
+	// apple
+	// banana
+	// cherry
+}
+
+func ExampleTake2() {
+	users := seq.Sorted2(map[string]string{"alice": "admin", "bob": "user", "charlie": "manager", "dave": "manager"})
+
+	first3 := seq.Take2(users, 3)
+
+	printSorted(first3)
+
+	// Output:
+	// alice: admin
+	// bob: user
+	// charlie: manager
+}
+
+func ExampleTakeWhile() {
+	fruits := slices.Values([]string{"apple", "apricot", "acerola", "banana", "cherry", "grape", "mango"})
+
+	startsWithA := seq.TakeWhile(fruits, func(v string) bool { return v[0] == 'a' })
+
+	for n := range startsWithA {
+		fmt.Println(n)
+	}
+
+	// Output:
+	// apple
+	// apricot
+	// acerola
+}
+
+func ExampleTakeWhile2() {
+	users := seq.Sorted2(map[string]string{"alice": "admin", "bob": "admin", "charlie": "manager", "dave": "manager"})
+
+	firstAdmins := seq.TakeWhile2(users, func(k string, v string) bool { return v == "admin" })
+
+	printSorted(firstAdmins)
+
+	// Output:
+	// alice: admin
+	// bob: admin
 }
 
 func ExampleValuesErr_ok() {
@@ -364,4 +352,16 @@ func ExampleValuesErr_error() {
 
 	// Output:
 	// something went wrong
+}
+
+// Maps are unordered, so we need to hack for examples
+func printSorted[K any, V any](s iter.Seq2[K, V]) {
+	var output []string
+
+	for key, value := range s {
+		output = append(output, fmt.Sprintf("%v: %v\n", key, value))
+	}
+
+	sort.Strings(output)
+	fmt.Print(strings.Join(output, ""))
 }

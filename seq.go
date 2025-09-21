@@ -2,7 +2,9 @@
 package seq
 
 import (
+	"cmp"
 	"iter"
+	"maps"
 	"slices"
 )
 
@@ -249,6 +251,21 @@ func SkipWhile2[K comparable, V any](seq iter.Seq2[K, V], predicate func(K, V) b
 			predicate = func(K, V) bool { return false }
 
 			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
+// Sorted2 creates an iterator that yields pairs in a sorted order (by key).
+//
+// Useful when you need to iterate over a map in a sorted order.
+func Sorted2[K cmp.Ordered, V any](m map[K]V) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		keys := slices.Sorted(maps.Keys(m))
+
+		for _, k := range keys {
+			if !yield(k, m[k]) {
 				return
 			}
 		}
