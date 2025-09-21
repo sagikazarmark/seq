@@ -243,7 +243,7 @@ func SkipWhile2[K comparable, V any](seq iter.Seq2[K, V], predicate func(K, V) b
 	return func(yield func(K, V) bool) {
 		for k, v := range seq {
 			if predicate(k, v) {
-				return
+				continue
 			}
 
 			predicate = func(K, V) bool { return false }
