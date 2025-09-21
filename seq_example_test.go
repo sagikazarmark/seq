@@ -192,37 +192,25 @@ func ExampleMap2() {
 	// dave: 1500
 }
 
-func ExampleUniq() {
-	numbers := slices.Values([]int{1, 2, 2, 3, 1, 4, 3, 5})
+func ExampleRepeat() {
+	meaningOfLife := seq.Repeat(42)
 
-	unique := seq.Uniq(numbers)
+	var i int
 
-	for number := range unique {
-		fmt.Println(number)
+	for n := range meaningOfLife {
+		fmt.Println(n)
+		i++
+		if i == 5 {
+			break
+		}
 	}
 
 	// Output:
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-}
-
-func ExampleUniq2() {
-	roles := seq.Chain2(
-		maps.All(map[string]string{"alice": "admin", "bob": "user"}),
-		maps.All(map[string]string{"alice": "user", "charlie": "user"}),
-	)
-
-	unique := seq.Uniq2(roles)
-
-	printSorted(unique)
-
-	// Output:
-	// alice: admin
-	// bob: user
-	// charlie: user
+	// 42
+	// 42
+	// 42
+	// 42
+	// 42
 }
 
 func ExampleSkip() {
@@ -318,6 +306,39 @@ func ExampleTakeWhile2() {
 	// Output:
 	// alice: admin
 	// bob: admin
+}
+
+func ExampleUniq() {
+	numbers := slices.Values([]int{1, 2, 2, 3, 1, 4, 3, 5})
+
+	unique := seq.Uniq(numbers)
+
+	for number := range unique {
+		fmt.Println(number)
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+	// 4
+	// 5
+}
+
+func ExampleUniq2() {
+	roles := seq.Chain2(
+		maps.All(map[string]string{"alice": "admin", "bob": "user"}),
+		maps.All(map[string]string{"alice": "user", "charlie": "user"}),
+	)
+
+	unique := seq.Uniq2(roles)
+
+	printSorted(unique)
+
+	// Output:
+	// alice: admin
+	// bob: user
+	// charlie: user
 }
 
 func ExampleValuesErr_ok() {

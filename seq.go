@@ -159,6 +159,19 @@ func Map2[K any, V any, U any](seq iter.Seq2[K, V], fn func(K, V) U) iter.Seq2[K
 	}
 }
 
+// Repeat creates an iterator that yields the same value over and over.
+//
+// WARNING: This iterator will never terminate on its own.
+func Repeat[V any](v V) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		for {
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
 // Skip creates an iterator that skips values until n values are skipped or the end of the iterator is reached (whichever happens first).
 func Skip[V comparable](seq iter.Seq[V], n uint) iter.Seq[V] {
 	// Return early if n is zero
