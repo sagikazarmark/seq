@@ -24,13 +24,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - name: Set up Go
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+      - name: Install Nix
+        uses: cachix/install-nix-action@7be5dee1421f63d07e71ce6e0a9f8a4b07c2a487 # v31.6.1
+
+      - name: Configure cachix
+        uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad # v16
         with:
-          go-version: ${{ matrix.go }}
+          name: devenv
+
+      - name: Install devenv
+        run: nix profile add nixpkgs#devenv
 
       - name: Test
-        run: go test -shuffle on -race -v ./...
+        run: |
+          GO_VERSION=${{ matrix.go }}
+          devenv shell --option languages.go.package:pkg "go_${GO_VERSION//./_}" -- just test
 
   lint:
     name: Lint
