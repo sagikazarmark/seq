@@ -450,6 +450,51 @@ func TestMap2(t *testing.T) {
 	}
 }
 
+func TestRepeat(t *testing.T) {
+	testCases := []struct {
+		name     string
+		value    int
+		takeN    uint
+		expected []int
+	}{
+		{
+			"repeat_integer",
+			42,
+			5,
+			[]int{42, 42, 42, 42, 42},
+		},
+		{
+			"repeat_zero_times",
+			10,
+			0,
+			[]int{},
+		},
+		{
+			"repeat_once",
+			7,
+			1,
+			[]int{7},
+		},
+		{
+			"repeat_negative_number",
+			-5,
+			3,
+			[]int{-5, -5, -5},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			repeated := seq.Repeat(tc.value)
+			actual := slices.Collect(seq.Take(repeated, tc.takeN))
+
+			if !slices.Equal(actual, tc.expected) {
+				t.Errorf("expected %v, got %v", tc.expected, actual)
+			}
+		})
+	}
+}
+
 func TestSkip(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -589,6 +634,222 @@ func TestSkip2(t *testing.T) {
 			for k, v := range actual {
 				if originalV, exists := tc.input[k]; !exists || originalV != v {
 					t.Errorf("unexpected pair %s: %d not in original input", k, v)
+				}
+			}
+		})
+	}
+}
+
+func TestSkipWhile(t *testing.T) {
+	testCases := []struct {
+		name      string
+		input     []int
+		predicate func(int) bool
+		expected  []int
+	}{
+		{
+			"empty_sequence",
+			[]int{},
+			func(n int) bool { return n < 5 },
+			[]int{},
+		},
+		{
+			"nil_predicate",
+			[]int{1, 2, 3, 4, 5},
+			nil,
+			[]int{1, 2, 3, 4, 5},
+		},
+		{
+			"skip_while_less_than_5",
+			[]int{1, 2, 3, 4, 5, 6, 7, 3, 4},
+			func(n int) bool { return n < 5 },
+			[]int{5, 6, 7, 3, 4},
+		},
+		{
+			"skip_while_even",
+			[]int{2, 4, 6, 8, 9, 10, 12},
+			func(n int) bool { return n%2 == 0 },
+			[]int{9, 10, 12},
+		},
+		{
+			"predicate_never_true",
+			[]int{1, 2, 3, 4, 5},
+			func(n int) bool { return n > 10 },
+			[]int{1, 2, 3, 4, 5},
+		},
+		{
+			"predicate_always_true",
+			[]int{1, 2, 3, 4, 5},
+			func(n int) bool { return n > 0 },
+			[]int{},
+		},
+		{
+			"single_element_true",
+			[]int{42},
+			func(n int) bool { return n == 42 },
+			[]int{},
+		},
+		{
+			"single_element_false",
+			[]int{42},
+			func(n int) bool { return n != 42 },
+			[]int{42},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := slices.Values(tc.input)
+			actual := slices.Collect(seq.SkipWhile(input, tc.predicate))
+
+			if !slices.Equal(actual, tc.expected) {
+				t.Errorf("expected %v, got %v", tc.expected, actual)
+			}
+		})
+	}
+}
+
+func TestSkipWhile2(t *testing.T) {
+	testCases := []struct {
+		name              string
+		input             map[string]int
+		predicate         func(string, int) bool
+		expectedCondition func(map[string]int) bool
+		description       string
+	}{
+		{
+			"empty_sequence",
+			map[string]int{},
+			func(k string, v int) bool { return v < 5 },
+			func(result map[string]int) bool { return len(result) == 0 },
+			"should return empty map",
+		},
+		{
+			"nil_predicate",
+			map[string]int{"a": 1, "b": 2},
+			nil,
+			func(result map[string]int) bool { return len(result) == 2 },
+			"should return all pairs when predicate is nil",
+		},
+		{
+			"predicate_never_true",
+			map[string]int{"a": 1, "b": 2, "c": 3},
+			func(k string, v int) bool { return v > 10 },
+			func(result map[string]int) bool { return len(result) == 3 },
+			"should return all pairs when predicate never matches",
+		},
+		{
+			"single_element_true",
+			map[string]int{"key": 42},
+			func(k string, v int) bool { return v == 42 },
+			func(result map[string]int) bool { return len(result) == 0 },
+			"should return empty when single element matches",
+		},
+		{
+			"single_element_false",
+			map[string]int{"key": 42},
+			func(k string, v int) bool { return v != 42 },
+			func(result map[string]int) bool {
+				return len(result) == 1 && result["key"] == 42
+			},
+			"should return single element when it doesn't match",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := maps.All(tc.input)
+			actual := maps.Collect(seq.SkipWhile2(input, tc.predicate))
+
+			if !tc.expectedCondition(actual) {
+				t.Errorf("%s, got %v", tc.description, actual)
+			}
+
+			// Verify that all returned pairs exist in the original input
+			for k, v := range actual {
+				if originalV, exists := tc.input[k]; !exists || originalV != v {
+					t.Errorf("unexpected pair %s: %d not in original input", k, v)
+				}
+			}
+		})
+	}
+}
+
+func TestSorted2(t *testing.T) {
+	testCases := []struct {
+		name        string
+		input       map[string]int
+		expectedSeq []struct {
+			key   string
+			value int
+		}
+	}{
+		{
+			"empty_map",
+			map[string]int{},
+			[]struct {
+				key   string
+				value int
+			}{},
+		},
+		{
+			"single_pair",
+			map[string]int{"key": 42},
+			[]struct {
+				key   string
+				value int
+			}{{"key", 42}},
+		},
+		{
+			"multiple_pairs_sorted",
+			map[string]int{"charlie": 3, "alice": 1, "bob": 2},
+			[]struct {
+				key   string
+				value int
+			}{
+				{"alice", 1},
+				{"bob", 2},
+				{"charlie", 3},
+			},
+		},
+		{
+			"numeric_keys",
+			map[string]int{"10": 10, "2": 2, "1": 1},
+			[]struct {
+				key   string
+				value int
+			}{
+				{"1", 1},
+				{"10", 10},
+				{"2", 2},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			sortedSeq := seq.Sorted2(tc.input)
+
+			var actual []struct {
+				key   string
+				value int
+			}
+
+			for k, v := range sortedSeq {
+				actual = append(actual, struct {
+					key   string
+					value int
+				}{k, v})
+			}
+
+			if len(actual) != len(tc.expectedSeq) {
+				t.Errorf("expected length %d, got %d", len(tc.expectedSeq), len(actual))
+				return
+			}
+
+			for i, expected := range tc.expectedSeq {
+				if actual[i].key != expected.key || actual[i].value != expected.value {
+					t.Errorf("at index %d: expected %+v, got %+v", i, expected, actual[i])
 				}
 			}
 		})

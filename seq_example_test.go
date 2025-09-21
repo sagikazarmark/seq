@@ -239,6 +239,38 @@ func ExampleSkip2() {
 	// dave: manager
 }
 
+func ExampleSkipWhile() {
+	fruits := slices.Values([]string{"apple", "apricot", "acerola", "banana", "cherry", "grape", "mango"})
+
+	noAs := seq.SkipWhile(fruits, func(v string) bool { return v[0] == 'a' })
+
+	for n := range noAs {
+		fmt.Println(n)
+	}
+
+	// Output:
+	// banana
+	// cherry
+	// grape
+	// mango
+}
+
+func ExampleSkipWhile2() {
+	users := seq.Sorted2(map[string]string{"alice": "admin", "bob": "admin", "charlie": "manager", "dave": "user"})
+
+	skipAdmins := func(k string, v string) bool {
+		return v == "admin"
+	}
+
+	afterAdmins := seq.SkipWhile2(users, skipAdmins)
+
+	printSorted(afterAdmins)
+
+	// Output:
+	// charlie: manager
+	// dave: user
+}
+
 func ExampleSorted2() {
 	users := seq.Sorted2(map[string]string{"charlie": "manager", "bob": "user", "alice": "admin", "dave": "manager"})
 
